@@ -1,0 +1,174 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #1a1a1a;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #f0f0f0;
+}
+
+#canvas-container {
+  position: absolute;
+  inset: 0;
+}
+
+#canvas-container canvas {
+  display: block;
+  cursor: pointer;
+}
+
+#canvas-container canvas.orbiting {
+  cursor: grabbing;
+}
+
+#ui-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  pointer-events: none;
+}
+
+#top-bar,
+#bottom-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+#top-bar > *,
+#bottom-bar > * {
+  pointer-events: auto;
+}
+
+#status-bar {
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 10px;
+  padding: 10px 20px;
+  text-align: center;
+  backdrop-filter: blur(6px);
+}
+
+#turn-indicator {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+#active-player {
+  color: #ffcc33;
+}
+
+#phase-indicator {
+  font-size: 13px;
+  color: #bbb;
+  margin-top: 2px;
+}
+
+#move-panel {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 10px;
+  padding: 10px 14px;
+  backdrop-filter: blur(6px);
+  max-width: 640px;
+}
+
+.move-face-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.face-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #888;
+  width: 14px;
+  text-align: center;
+}
+
+.move-face-group button {
+  min-width: 34px;
+  padding: 6px 8px;
+  border: 1px solid #444;
+  background: #2a2a2a;
+  color: #f0f0f0;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.move-face-group button:hover:not(:disabled) {
+  background: #3a3a3a;
+}
+
+.move-face-group button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+#restart-button {
+  padding: 8px 16px;
+  border: 1px solid #555;
+  background: rgba(0, 0, 0, 0.55);
+  color: #f0f0f0;
+  border-radius: 8px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+
+#restart-button:hover {
+  background: rgba(30, 30, 30, 0.75);
+}
+
+#banner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+#banner.hidden {
+  display: none;
+}
+
+#banner-text {
+  font-size: 42px;
+  font-weight: 700;
+  color: #ffcc33;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+
+#banner-restart {
+  padding: 12px 28px;
+  font-size: 16px;
+  border: none;
+  background: #ffcc33;
+  color: #1a1a1a;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+#banner-restart:hover {
+  background: #ffd966;
+}

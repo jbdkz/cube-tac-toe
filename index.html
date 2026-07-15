@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cube Tac Toe</title>
+<link rel="stylesheet" href="style.css" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <div id="ui-overlay">
+    <div id="top-bar">
+      <div id="status-bar">
+        <div id="turn-indicator">Player <span id="active-player">X</span>'s turn</div>
+        <div id="phase-indicator">Place your mark on any empty sticker</div>
+      </div>
+    </div>
+
+    <div id="bottom-bar">
+      <div id="move-panel">
+        <div class="move-face-group" data-face="U">
+          <span class="face-label">U</span>
+          <button data-move="U">U</button>
+          <button data-move="U'">U'</button>
+          <button data-move="U2">U2</button>
+        </div>
+        <div class="move-face-group" data-face="D">
+          <span class="face-label">D</span>
+          <button data-move="D">D</button>
+          <button data-move="D'">D'</button>
+          <button data-move="D2">D2</button>
+        </div>
+        <div class="move-face-group" data-face="L">
+          <span class="face-label">L</span>
+          <button data-move="L">L</button>
+          <button data-move="L'">L'</button>
+          <button data-move="L2">L2</button>
+        </div>
+        <div class="move-face-group" data-face="R">
+          <span class="face-label">R</span>
+          <button data-move="R">R</button>
+          <button data-move="R'">R'</button>
+          <button data-move="R2">R2</button>
+        </div>
+        <div class="move-face-group" data-face="F">
+          <span class="face-label">F</span>
+          <button data-move="F">F</button>
+          <button data-move="F'">F'</button>
+          <button data-move="F2">F2</button>
+        </div>
+        <div class="move-face-group" data-face="B">
+          <span class="face-label">B</span>
+          <button data-move="B">B</button>
+          <button data-move="B'">B'</button>
+          <button data-move="B2">B2</button>
+        </div>
+      </div>
+
+      <button id="restart-button">Restart</button>
+    </div>
+  </div>
+
+  <div id="banner" class="hidden">
+    <div id="banner-text"></div>
+    <button id="banner-restart">Play Again</button>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
