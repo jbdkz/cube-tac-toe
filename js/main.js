@@ -12,6 +12,7 @@ window.addEventListener('DOMContentLoaded', () => {
     onRestart: () => game.restart(),
     onMoveHover: (move) => sceneRefs.previewMove(move),
     onMoveHoverEnd: () => sceneRefs.clearMovePreview(),
+    onAiToggle: (enabled) => game.setAiEnabled(enabled),
   });
 
   const game = createGame(sceneRefs, ui);

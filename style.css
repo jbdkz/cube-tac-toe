@@ -121,6 +121,26 @@ html, body {
   cursor: not-allowed;
 }
 
+#settings-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+#ai-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #ddd;
+  cursor: pointer;
+  user-select: none;
+}
+
+#ai-toggle-label input {
+  cursor: pointer;
+}
+
 #restart-button {
   padding: 8px 16px;
   border: 1px solid #555;
