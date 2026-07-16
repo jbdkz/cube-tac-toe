@@ -10,6 +10,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const ui = initUI({
     onMoveButton: (move) => game.performMove(move),
     onRestart: () => game.restart(),
+    onMoveHover: (move) => sceneRefs.previewMove(move),
+    onMoveHoverEnd: () => sceneRefs.clearMovePreview(),
   });
 
   const game = createGame(sceneRefs, ui);

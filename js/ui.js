@@ -1,9 +1,13 @@
-export function initUI({ onMoveButton, onRestart }) {
+export function initUI({ onMoveButton, onRestart, onMoveHover, onMoveHoverEnd }) {
   const moveButtons = {};
   document.querySelectorAll('#move-panel button[data-move]').forEach((btn) => {
     const move = btn.dataset.move;
     moveButtons[move] = btn;
     btn.addEventListener('click', () => onMoveButton(move));
+    btn.addEventListener('mouseenter', () => {
+      if (!btn.disabled) onMoveHover(move);
+    });
+    btn.addEventListener('mouseleave', () => onMoveHoverEnd());
   });
 
   document.getElementById('restart-button').addEventListener('click', onRestart);

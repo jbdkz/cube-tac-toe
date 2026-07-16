@@ -7,6 +7,9 @@ const CUBIE_SIZE = 0.95;
 const STICKER_SIZE = 0.8;
 const STICKER_OFFSET = CUBIE_SIZE / 2 + 0.001;
 const MOVE_DURATION_MS = 250;
+const LAYER_PREVIEW_COLOR = 0xffcc33;
+const AXIS_VECTORS = { x: new THREE.Vector3(1, 0, 0), y: new THREE.Vector3(0, 1, 0), z: new THREE.Vector3(0, 0, 1) };
+const OTHER_AXES = { x: ['y', 'z'], y: ['x', 'z'], z: ['x', 'y'] };
 
 const LOCAL_DIRS = {
   px: new THREE.Vector3(1, 0, 0),
@@ -145,6 +148,13 @@ export function createCubeTacToeScene(container) {
   const cubieGeometry = new THREE.BoxGeometry(CUBIE_SIZE, CUBIE_SIZE, CUBIE_SIZE);
   const cubieMaterial = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 });
   const stickerGeometry = new THREE.PlaneGeometry(STICKER_SIZE, STICKER_SIZE);
+  const glowGeometry = new THREE.BoxGeometry(CUBIE_SIZE * 1.12, CUBIE_SIZE * 1.12, CUBIE_SIZE * 1.12);
+  const glowMaterial = new THREE.MeshBasicMaterial({
+    color: LAYER_PREVIEW_COLOR,
+    transparent: true,
+    opacity: 0.45,
+    depthWrite: false,
+  });
 
   const allCubies = [];
   const stickerMeshes = [];
@@ -156,6 +166,12 @@ export function createCubeTacToeScene(container) {
         cubie.position.set(x, y, z);
         cubeGroup.add(cubie);
         allCubies.push(cubie);
+
+        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+        glow.visible = false;
+        glow.renderOrder = 1;
+        cubie.add(glow);
+        cubie.userData.glow = glow;
 
         const exteriorDirs = [];
         if (x === 1) exteriorDirs.push('px');
@@ -235,6 +251,7 @@ export function createCubeTacToeScene(container) {
   }
 
   function resetCube() {
+    clearMovePreview();
     for (const sticker of stickerMeshes) {
       setStickerMark(sticker, null, false);
     }
@@ -252,10 +269,71 @@ export function createCubeTacToeScene(container) {
     recomputeMeshLookup();
   }
 
+  let previewState = null;
+  let previewArrowGroup = null;
+
+  function setLayerGlow(axis, layerCoord, visible) {
+    for (const cubie of allCubies) {
+      if (Math.round(cubie.position[axis]) === layerCoord) {
+        cubie.userData.glow.visible = visible;
+      }
+    }
+  }
+
+  function buildDirectionArrows(axis, layerCoord, angle) {
+    const group = new THREE.Group();
+    const axisVec = AXIS_VECTORS[axis];
+    const [axisAName, axisBName] = OTHER_AXES[axis];
+    const axisAVec = AXIS_VECTORS[axisAName];
+    const axisBVec = AXIS_VECTORS[axisBName];
+    const radius = 2.05;
+    const sign = Math.sign(angle) || 1;
+    const arrowLength = 0.7;
+
+    for (const theta of [Math.PI / 4, (3 * Math.PI) / 4, (5 * Math.PI) / 4, (7 * Math.PI) / 4]) {
+      const radial = axisAVec.clone().multiplyScalar(Math.cos(theta)).add(axisBVec.clone().multiplyScalar(Math.sin(theta)));
+      const point = radial.clone().multiplyScalar(radius);
+      point[axis] = layerCoord;
+
+      const tangent = axisVec.clone().cross(radial).multiplyScalar(sign).normalize();
+      const origin = point.clone().sub(tangent.clone().multiplyScalar(arrowLength / 2));
+      const arrow = new THREE.ArrowHelper(tangent, origin, arrowLength, LAYER_PREVIEW_COLOR, arrowLength * 0.4, arrowLength * 0.3);
+      group.add(arrow);
+    }
+    return group;
+  }
+
+  function previewMove(moveStr) {
+    if (animating) return;
+    clearMovePreview();
+
+    const { axis, layerCoord, angle } = parseMove(moveStr);
+    setLayerGlow(axis, layerCoord, true);
+    previewState = { axis, layerCoord };
+
+    previewArrowGroup = buildDirectionArrows(axis, layerCoord, angle);
+    scene.add(previewArrowGroup);
+  }
+
+  function clearMovePreview() {
+    if (previewState) {
+      setLayerGlow(previewState.axis, previewState.layerCoord, false);
+      previewState = null;
+    }
+    if (previewArrowGroup) {
+      scene.remove(previewArrowGroup);
+      previewArrowGroup.traverse((obj) => {
+        if (obj.material) obj.material.dispose();
+      });
+      previewArrowGroup = null;
+    }
+  }
+
   let animating = false;
 
   function animateMove(moveStr, onComplete, { instant = false } = {}) {
     if (animating) return;
+    clearMovePreview();
     animating = true;
 
     const { axis, layerCoord, angle } = parseMove(moveStr);
@@ -332,6 +410,8 @@ export function createCubeTacToeScene(container) {
     clearAllHighlights,
     resetCube,
     animateMove,
+    previewMove,
+    clearMovePreview,
     isAnimating,
     render,
     handleResize,
