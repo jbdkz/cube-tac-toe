@@ -1,12 +1,13 @@
 import { checkWinsAndDraw } from './state.js';
 import { setStickerMark, getCubiePosition } from './scene.js';
-import { movesIncludingCubie } from './moves.js';
+import { movesIncludingCubie, ALL_MOVES } from './moves.js';
 import { chooseCell, chooseMove } from './ai.js';
 
 const AI_PLAYER = 'O';
 const AI_THINK_DELAY_MS = 600;
 const AI_MOVE_DELAY_MS = 700;
 const NO_MOVES = new Set();
+const ANY_MOVE = new Set(ALL_MOVES);
 
 function other(player) {
   return player === 'X' ? 'O' : 'X';
@@ -51,10 +52,16 @@ export function createGame(sceneRefs, ui) {
         ui.setPhaseText('Turning the cube…');
         break;
       case 'GAME_OVER':
-        ui.setPhaseText('Game over — restart to play again');
+        ui.setPhaseText('Game over — rotate freely to review, or restart');
         break;
     }
-    ui.setMoveButtonsEnabled(turnPhase === 'MUST_MOVE' && !isAiActing() ? legalMoves : NO_MOVES);
+    if (turnPhase === 'MUST_MOVE' && !isAiActing()) {
+      ui.setMoveButtonsEnabled(legalMoves);
+    } else if (turnPhase === 'GAME_OVER') {
+      ui.setMoveButtonsEnabled(ANY_MOVE);
+    } else {
+      ui.setMoveButtonsEnabled(NO_MOVES);
+    }
   }
 
   function applyPlacement(stickerMesh) {
@@ -88,6 +95,12 @@ export function createGame(sceneRefs, ui) {
   }
 
   function performMove(moveStr) {
+    if (turnPhase === 'GAME_OVER') {
+      // Free review rotation once the game has ended — doesn't touch turn
+      // state or re-trigger win detection, just lets the player look around.
+      sceneRefs.animateMove(moveStr, () => {});
+      return;
+    }
     if (isAiActing()) return;
     applyMove(moveStr);
   }
@@ -130,12 +143,17 @@ export function createGame(sceneRefs, ui) {
     }
   }
 
+  function linesToStickerGroups(lines) {
+    return lines.map((line) => line.cells.map(([r, c]) => sceneRefs.meshLookup[line.face][r][c]));
+  }
+
   function resolveAfterMove() {
     const state = sceneRefs.readLogicalState();
     const result = checkWinsAndDraw(state);
 
     if (result.result === 'win') {
       highlightLines(result.lines);
+      sceneRefs.showWinLines(linesToStickerGroups(result.lines));
       turnPhase = 'GAME_OVER';
       ui.showBanner(`Player ${result.winner} wins!`);
       updateUI();
@@ -143,7 +161,10 @@ export function createGame(sceneRefs, ui) {
     }
 
     if (result.result === 'draw') {
-      if (result.lines.length) highlightLines(result.lines);
+      if (result.lines.length) {
+        highlightLines(result.lines);
+        sceneRefs.showWinLines(linesToStickerGroups(result.lines));
+      }
       turnPhase = 'GAME_OVER';
       ui.showBanner(
         result.reason === 'simultaneous'

@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { Line2 } from 'three/addons/lines/Line2.js';
+import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
+import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import { FACES, createEmptyState } from './state.js';
 import { parseMove } from './moves.js';
 
@@ -8,6 +11,8 @@ const STICKER_SIZE = 0.8;
 const STICKER_OFFSET = CUBIE_SIZE / 2 + 0.001;
 const MOVE_DURATION_MS = 250;
 const LAYER_PREVIEW_COLOR = 0xffcc33;
+const WIN_LINE_COLOR = 0x2ecc71;
+const WIN_LINE_OFFSET = 0.04;
 const AXIS_VECTORS = { x: new THREE.Vector3(1, 0, 0), y: new THREE.Vector3(0, 1, 0), z: new THREE.Vector3(0, 0, 1) };
 const OTHER_AXES = { x: ['y', 'z'], y: ['x', 'z'], z: ['x', 'y'] };
 
@@ -19,6 +24,18 @@ const LOCAL_DIRS = {
   pz: new THREE.Vector3(0, 0, 1),
   nz: new THREE.Vector3(0, 0, -1),
 };
+
+// World-space point just above a sticker's face, used as an endpoint for the
+// win-line. Relies on the sticker's cubie already being reattached to
+// cubeGroup (i.e. not mid-animation, parented to a transient pivot).
+function computeWinLinePoint(sticker) {
+  const cubie = sticker.parent;
+  const localDir = LOCAL_DIRS[sticker.userData.localDir];
+  const worldNormal = localDir.clone().applyQuaternion(cubie.quaternion);
+  const worldPos = new THREE.Vector3();
+  sticker.getWorldPosition(worldPos);
+  return worldPos.addScaledVector(worldNormal, WIN_LINE_OFFSET);
+}
 
 function faceFromWorldNormal(nx, ny, nz) {
   if (ny === 1) return 'U';
@@ -150,6 +167,15 @@ export function createCubeTacToeScene(container) {
   const cubeGroup = new THREE.Group();
   scene.add(cubeGroup);
 
+  const winLineMaterial = new LineMaterial({
+    color: WIN_LINE_COLOR,
+    linewidth: 5,
+    transparent: true,
+    depthTest: false,
+  });
+  winLineMaterial.resolution.set(container.clientWidth, container.clientHeight);
+  let winLineGroups = [];
+
   const cubieGeometry = new THREE.BoxGeometry(CUBIE_SIZE, CUBIE_SIZE, CUBIE_SIZE);
   const cubieMaterial = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 });
   const stickerGeometry = new THREE.PlaneGeometry(STICKER_SIZE, STICKER_SIZE);
@@ -255,8 +281,43 @@ export function createCubeTacToeScene(container) {
     }
   }
 
+  function showWinLines(lineGroups) {
+    hideWinLines();
+    for (const stickers of lineGroups) {
+      const geometry = new LineGeometry();
+      const positions = stickers.flatMap((s) => {
+        const p = computeWinLinePoint(s);
+        return [p.x, p.y, p.z];
+      });
+      geometry.setPositions(positions);
+      const lineObj = new Line2(geometry, winLineMaterial);
+      lineObj.renderOrder = 2;
+      scene.add(lineObj);
+      winLineGroups.push({ stickers, lineObj });
+    }
+  }
+
+  function hideWinLines() {
+    for (const { lineObj } of winLineGroups) {
+      scene.remove(lineObj);
+      lineObj.geometry.dispose();
+    }
+    winLineGroups = [];
+  }
+
+  function updateWinLines() {
+    for (const { stickers, lineObj } of winLineGroups) {
+      const positions = stickers.flatMap((s) => {
+        const p = computeWinLinePoint(s);
+        return [p.x, p.y, p.z];
+      });
+      lineObj.geometry.setPositions(positions);
+    }
+  }
+
   function resetCube() {
     clearMovePreview();
+    hideWinLines();
     for (const sticker of stickerMeshes) {
       setStickerMark(sticker, null, false);
     }
@@ -362,6 +423,7 @@ export function createCubeTacToeScene(container) {
       }
       cubeGroup.remove(pivot);
       recomputeMeshLookup();
+      updateWinLines();
       animating = false;
       onComplete();
     };
@@ -399,6 +461,7 @@ export function createCubeTacToeScene(container) {
     camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(container.clientWidth, container.clientHeight);
+    winLineMaterial.resolution.set(container.clientWidth, container.clientHeight);
   }
 
   return {
@@ -417,6 +480,8 @@ export function createCubeTacToeScene(container) {
     animateMove,
     previewMove,
     clearMovePreview,
+    showWinLines,
+    hideWinLines,
     isAnimating,
     render,
     handleResize,
