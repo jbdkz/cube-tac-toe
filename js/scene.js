@@ -401,6 +401,9 @@ export function createCubeTacToeScene(container) {
 
     previewArrowGroup = buildDirectionArrows(axis, layerCoord, angle);
     scene.add(previewArrowGroup);
+    // Compute occlusion immediately so the first rendered frame is already
+    // correct, instead of a moment of every arrow at its default `visible`.
+    updatePreviewArrowVisibility();
   }
 
   function clearMovePreview() {
