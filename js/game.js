@@ -20,6 +20,7 @@ export function createGame(sceneRefs, ui) {
   let aiEnabled = false;
   let aiDifficulty = 'medium';
   let aiTimeoutId = null;
+  let gameStarted = false; // gated behind the mode-selection modal
 
   // During PLACE, activePlayer places. During MUST_MOVE, the *other* player
   // rotates — that's the rule: your opponent's mark dictates your move.
@@ -91,11 +92,13 @@ export function createGame(sceneRefs, ui) {
   }
 
   function placeMark(stickerMesh) {
+    if (!gameStarted) return;
     if (isAiActing()) return;
     applyPlacement(stickerMesh);
   }
 
   function performMove(moveStr) {
+    if (!gameStarted) return;
     if (turnPhase === 'GAME_OVER') {
       // Free review rotation once the game has ended — doesn't touch turn
       // state or re-trigger win detection, just lets the player look around.
@@ -128,15 +131,14 @@ export function createGame(sceneRefs, ui) {
     }
   }
 
-  function setAiEnabled(enabled) {
+  function startGame({ aiEnabled: enabled, difficulty }) {
     aiEnabled = enabled;
+    aiDifficulty = difficulty;
+    gameStarted = true;
     clearPendingAiTurn();
+    ui.hideModeModal();
     updateUI();
     maybeTriggerAiTurn();
-  }
-
-  function setAiDifficulty(difficulty) {
-    aiDifficulty = difficulty;
   }
 
   function highlightLines(lines) {
@@ -193,11 +195,14 @@ export function createGame(sceneRefs, ui) {
     activePlayer = 'X';
     turnPhase = 'PLACE';
     legalMoves = NO_MOVES;
+    gameStarted = false;
     ui.hideBanner();
     updateUI();
+    ui.showModeModal({ aiEnabled, difficulty: aiDifficulty });
   }
 
   updateUI();
+  ui.showModeModal({ aiEnabled, difficulty: aiDifficulty });
 
-  return { placeMark, performMove, restart, setAiEnabled, setAiDifficulty, getPhase: () => turnPhase };
+  return { placeMark, performMove, restart, startGame, getPhase: () => turnPhase };
 }

@@ -12,8 +12,7 @@ window.addEventListener('DOMContentLoaded', () => {
     onRestart: () => game.restart(),
     onMoveHover: (move) => sceneRefs.previewMove(move),
     onMoveHoverEnd: () => sceneRefs.clearMovePreview(),
-    onAiToggle: (enabled) => game.setAiEnabled(enabled),
-    onAiDifficultyChange: (difficulty) => game.setAiDifficulty(difficulty),
+    onModeChosen: ({ aiEnabled, difficulty }) => game.startGame({ aiEnabled, difficulty }),
   });
 
   const game = createGame(sceneRefs, ui);

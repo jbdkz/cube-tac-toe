@@ -70,16 +70,48 @@
       </div>
 
       <div id="settings-row">
-        <label id="ai-toggle-label">
-          <input type="checkbox" id="ai-toggle" />
-          AI opponent (Player O)
-        </label>
-        <select id="ai-difficulty">
-          <option value="easy">Easy</option>
-          <option value="medium" selected>Medium</option>
-          <option value="hard">Hard</option>
-        </select>
         <button id="restart-button">Restart</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="mode-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h1 class="modal-title">Cube Tac Toe</h1>
+      <p class="modal-subtitle">Choose how you'd like to play</p>
+
+      <div id="mode-screen" class="modal-screen">
+        <div class="option-grid">
+          <button class="option-card" data-mode="pvp">
+            <span class="option-icon">🧑‍🤝‍🧑</span>
+            <span class="option-title">Player vs Player</span>
+            <span class="option-desc">Two players share the cube</span>
+          </button>
+          <button class="option-card" data-mode="ai">
+            <span class="option-icon">🤖</span>
+            <span class="option-title">Player vs AI</span>
+            <span class="option-desc">Play against the computer</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="difficulty-screen" class="modal-screen hidden">
+        <p class="modal-subtitle">Choose a difficulty</p>
+        <div class="option-grid option-grid-three">
+          <button class="option-card" data-difficulty="easy">
+            <span class="option-title">Easy</span>
+            <span class="option-desc">Plays at random</span>
+          </button>
+          <button class="option-card" data-difficulty="medium">
+            <span class="option-title">Medium</span>
+            <span class="option-desc">Wins and blocks when it can</span>
+          </button>
+          <button class="option-card" data-difficulty="hard">
+            <span class="option-title">Hard</span>
+            <span class="option-desc">Also plays defensively</span>
+          </button>
+        </div>
+        <button id="mode-back-button" class="modal-back-button">← Back</button>
       </div>
     </div>
   </div>
