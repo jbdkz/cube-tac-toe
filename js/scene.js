@@ -96,6 +96,11 @@ export function setStickerMark(mesh, mark, highlight = false) {
   mesh.userData.highlight = highlight;
 }
 
+export function getCubiePosition(stickerMesh) {
+  const p = stickerMesh.parent.position;
+  return { x: Math.round(p.x), y: Math.round(p.y), z: Math.round(p.z) };
+}
+
 function snapObjectRotation(object3D) {
   const m = new THREE.Matrix4().makeRotationFromQuaternion(object3D.quaternion);
   const e = m.elements;

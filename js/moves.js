@@ -25,6 +25,14 @@ export function parseMove(moveStr) {
   return { face, axis, layerCoord, angle };
 }
 
+// Faces whose layer contains the given cubie grid coords (each in {-1,0,1}) —
+// used to restrict a rotation to faces that include a just-marked cube.
+export function movesIncludingCubie(x, y, z) {
+  const coords = { x, y, z };
+  const validFaces = FACES.filter((f) => coords[AXIS_FOR_FACE[f]] === LAYER_COORD_FOR_FACE[f]);
+  return ALL_MOVES.filter((m) => validFaces.includes(m[0]));
+}
+
 export function inverseMove(moveStr) {
   const face = moveStr[0];
   const suffix = moveStr.slice(1);

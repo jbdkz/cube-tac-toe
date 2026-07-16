@@ -1,6 +1,6 @@
 // Simple heuristic AI: win > block > random for placement; win > safe > random for the cube move.
 import { FACES, checkWinsAndDraw } from './state.js';
-import { ALL_MOVES, inverseMove } from './moves.js';
+import { inverseMove } from './moves.js';
 
 function cloneState(state) {
   const clone = {};
@@ -41,9 +41,10 @@ export function chooseCell(state, aiMark, opponentMark) {
 
 // Simulates each candidate move on the live scene (instant, no animation),
 // inspects the resulting logical state, then reverts — the cube never
-// actually moves during evaluation.
-export function chooseMove(sceneRefs, aiMark, opponentMark) {
-  const evaluations = ALL_MOVES.map((moveStr) => {
+// actually moves during evaluation. `legalMoves` restricts the candidates
+// to the moves allowed under the current turn's constraint.
+export function chooseMove(sceneRefs, aiMark, opponentMark, legalMoves) {
+  const evaluations = Array.from(legalMoves).map((moveStr) => {
     sceneRefs.animateMove(moveStr, () => {}, { instant: true });
     const state = sceneRefs.readLogicalState();
     const outcome = checkWinsAndDraw(state);

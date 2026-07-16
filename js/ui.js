@@ -26,8 +26,12 @@ export function initUI({ onMoveButton, onRestart, onMoveHover, onMoveHoverEnd, o
     setPhaseText(text) {
       phaseEl.textContent = text;
     },
-    setMoveButtonsEnabled(enabled) {
-      for (const btn of Object.values(moveButtons)) btn.disabled = !enabled;
+    // `allowedMoves` is a Set of move strings (e.g. "U", "U'", "U2") that
+    // should be enabled; an empty Set disables every button.
+    setMoveButtonsEnabled(allowedMoves) {
+      for (const [move, btn] of Object.entries(moveButtons)) {
+        btn.disabled = !allowedMoves.has(move);
+      }
     },
     showBanner(text) {
       bannerTextEl.textContent = text;
