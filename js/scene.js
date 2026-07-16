@@ -347,6 +347,7 @@ export function createCubeTacToeScene(container) {
   }
 
   function buildDirectionArrows(axis, layerCoord, angle) {
+    arrowEntries = [];
     const group = new THREE.Group();
     const axisVec = AXIS_VECTORS[axis];
     const [axisAName, axisBName] = OTHER_AXES[axis];
@@ -365,8 +366,29 @@ export function createCubeTacToeScene(container) {
       const origin = point.clone().sub(tangent.clone().multiplyScalar(arrowLength / 2));
       const arrow = new THREE.ArrowHelper(tangent, origin, arrowLength, LAYER_PREVIEW_COLOR, arrowLength * 0.4, arrowLength * 0.3);
       group.add(arrow);
+      arrowEntries.push({ arrow, point });
     }
     return group;
+  }
+
+  // Arrows sit on a ring wider than the cube, so they're never actually
+  // inside its silhouette — WebGL depth testing alone can't hide the ones
+  // around the back. Instead, raycast from the camera to each arrow's
+  // anchor point and hide it if a cubie sits in the way.
+  const occlusionRaycaster = new THREE.Raycaster();
+  let arrowEntries = [];
+
+  function updatePreviewArrowVisibility() {
+    if (!arrowEntries.length) return;
+    for (const { arrow, point } of arrowEntries) {
+      const toPoint = point.clone().sub(camera.position);
+      const dist = toPoint.length();
+      toPoint.normalize();
+      occlusionRaycaster.set(camera.position, toPoint);
+      occlusionRaycaster.near = 0.01;
+      occlusionRaycaster.far = dist - 0.05;
+      arrow.visible = occlusionRaycaster.intersectObjects(allCubies, false).length === 0;
+    }
   }
 
   function previewMove(moveStr) {
@@ -393,6 +415,7 @@ export function createCubeTacToeScene(container) {
       });
       previewArrowGroup = null;
     }
+    arrowEntries = [];
   }
 
   let animating = false;
@@ -454,6 +477,7 @@ export function createCubeTacToeScene(container) {
 
   function render() {
     controls.update();
+    updatePreviewArrowVisibility();
     renderer.render(scene, camera);
   }
 
