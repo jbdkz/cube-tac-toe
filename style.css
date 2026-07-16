@@ -141,6 +141,16 @@ html, body {
   cursor: pointer;
 }
 
+#ai-difficulty {
+  font-size: 13px;
+  color: #f0f0f0;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
 #restart-button {
   padding: 8px 16px;
   border: 1px solid #555;

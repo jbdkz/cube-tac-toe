@@ -1,4 +1,4 @@
-export function initUI({ onMoveButton, onRestart, onMoveHover, onMoveHoverEnd, onAiToggle }) {
+export function initUI({ onMoveButton, onRestart, onMoveHover, onMoveHoverEnd, onAiToggle, onAiDifficultyChange }) {
   const moveButtons = {};
   document.querySelectorAll('#move-panel button[data-move]').forEach((btn) => {
     const move = btn.dataset.move;
@@ -13,6 +13,7 @@ export function initUI({ onMoveButton, onRestart, onMoveHover, onMoveHoverEnd, o
   document.getElementById('restart-button').addEventListener('click', onRestart);
   document.getElementById('banner-restart').addEventListener('click', onRestart);
   document.getElementById('ai-toggle').addEventListener('change', (e) => onAiToggle(e.target.checked));
+  document.getElementById('ai-difficulty').addEventListener('change', (e) => onAiDifficultyChange(e.target.value));
 
   const activePlayerEl = document.getElementById('active-player');
   const phaseEl = document.getElementById('phase-indicator');

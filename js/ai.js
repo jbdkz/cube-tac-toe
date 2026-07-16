@@ -1,6 +1,11 @@
-// Simple heuristic AI: win > block > random for placement; win > safe > random for the cube move.
+// Heuristic AI with three difficulty tiers:
+//   easy   - random placement, random move.
+//   medium - win > block > random placement; win > safe > random move.
+//   hard   - medium, plus placement also avoids cells whose forced
+//            rotation would hand the opponent an immediate win.
 import { FACES, checkWinsAndDraw } from './state.js';
-import { inverseMove } from './moves.js';
+import { inverseMove, movesIncludingCubie } from './moves.js';
+import { setStickerMark, getCubiePosition } from './scene.js';
 
 function cloneState(state) {
   const clone = {};
@@ -30,12 +35,43 @@ function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-export function chooseCell(state, aiMark, opponentMark) {
+// Temporarily places `aiMark` on the cell, checks whether any of the
+// resulting forced-rotation choices would let the opponent win, then
+// restores the board — the live scene is left exactly as it was.
+function cellExposesOpponentWin(sceneRefs, cell, aiMark, opponentMark) {
+  const mesh = sceneRefs.meshLookup[cell.face][cell.row][cell.col];
+  setStickerMark(mesh, aiMark, false);
+
+  const pos = getCubiePosition(mesh);
+  const legalMoves = movesIncludingCubie(pos.x, pos.y, pos.z);
+  const exposed = legalMoves.some((moveStr) => {
+    sceneRefs.animateMove(moveStr, () => {}, { instant: true });
+    const outcome = checkWinsAndDraw(sceneRefs.readLogicalState());
+    sceneRefs.animateMove(inverseMove(moveStr), () => {}, { instant: true });
+    return outcome.result === 'win' && outcome.winner === opponentMark;
+  });
+
+  setStickerMark(mesh, null, false);
+  return exposed;
+}
+
+export function chooseCell(state, aiMark, opponentMark, sceneRefs, difficulty) {
   const cells = emptyCells(state);
+
+  if (difficulty === 'easy') {
+    return pickRandom(cells);
+  }
+
   const winCell = cells.find((cell) => wouldWin(state, cell, aiMark));
   if (winCell) return winCell;
   const blockCell = cells.find((cell) => wouldWin(state, cell, opponentMark));
   if (blockCell) return blockCell;
+
+  if (difficulty === 'hard') {
+    const safeCells = cells.filter((cell) => !cellExposesOpponentWin(sceneRefs, cell, aiMark, opponentMark));
+    if (safeCells.length) return pickRandom(safeCells);
+  }
+
   return pickRandom(cells);
 }
 
@@ -43,7 +79,11 @@ export function chooseCell(state, aiMark, opponentMark) {
 // inspects the resulting logical state, then reverts — the cube never
 // actually moves during evaluation. `legalMoves` restricts the candidates
 // to the moves allowed under the current turn's constraint.
-export function chooseMove(sceneRefs, aiMark, opponentMark, legalMoves) {
+export function chooseMove(sceneRefs, aiMark, opponentMark, legalMoves, difficulty) {
+  if (difficulty === 'easy') {
+    return pickRandom(Array.from(legalMoves));
+  }
+
   const evaluations = Array.from(legalMoves).map((moveStr) => {
     sceneRefs.animateMove(moveStr, () => {}, { instant: true });
     const state = sceneRefs.readLogicalState();

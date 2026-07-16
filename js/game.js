@@ -18,6 +18,7 @@ export function createGame(sceneRefs, ui) {
   let activePlayer = 'X'; // the player whose mark was (or is about to be) placed this round
   let legalMoves = NO_MOVES; // moves the rotator may choose from, once a mark is placed
   let aiEnabled = false;
+  let aiDifficulty = 'medium';
   let aiTimeoutId = null;
 
   // During PLACE, activePlayer places. During MUST_MOVE, the *other* player
@@ -113,7 +114,7 @@ export function createGame(sceneRefs, ui) {
         aiTimeoutId = null;
         if (!isAiActing() || turnPhase !== 'PLACE') return;
         const state = sceneRefs.readLogicalState();
-        const cell = chooseCell(state, AI_PLAYER, other(AI_PLAYER));
+        const cell = chooseCell(state, AI_PLAYER, other(AI_PLAYER), sceneRefs, aiDifficulty);
         const mesh = sceneRefs.meshLookup[cell.face][cell.row][cell.col];
         applyPlacement(mesh);
       }, AI_THINK_DELAY_MS);
@@ -121,7 +122,7 @@ export function createGame(sceneRefs, ui) {
       aiTimeoutId = setTimeout(() => {
         aiTimeoutId = null;
         if (!isAiActing() || turnPhase !== 'MUST_MOVE') return;
-        const moveStr = chooseMove(sceneRefs, AI_PLAYER, other(AI_PLAYER), legalMoves);
+        const moveStr = chooseMove(sceneRefs, AI_PLAYER, other(AI_PLAYER), legalMoves, aiDifficulty);
         applyMove(moveStr);
       }, AI_MOVE_DELAY_MS);
     }
@@ -132,6 +133,10 @@ export function createGame(sceneRefs, ui) {
     clearPendingAiTurn();
     updateUI();
     maybeTriggerAiTurn();
+  }
+
+  function setAiDifficulty(difficulty) {
+    aiDifficulty = difficulty;
   }
 
   function highlightLines(lines) {
@@ -194,5 +199,5 @@ export function createGame(sceneRefs, ui) {
 
   updateUI();
 
-  return { placeMark, performMove, restart, setAiEnabled, getPhase: () => turnPhase };
+  return { placeMark, performMove, restart, setAiEnabled, setAiDifficulty, getPhase: () => turnPhase };
 }
