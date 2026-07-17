@@ -1,11 +1,16 @@
 // Heuristic AI with three difficulty tiers:
 //   easy   - random placement, random move.
-//   medium - win > block > random placement; win > safe > random move.
-//   hard   - medium, plus placement also avoids cells whose forced
-//            rotation would hand the opponent an immediate win.
+//   medium - win > block > random placement; win > safe > random move,
+//            but with a chance of skipping straight to random so it's
+//            beatable — a perfect blocker is really a "hard" AI.
+//   hard   - the medium logic with no mistakes, plus placement also
+//            avoids cells whose forced rotation would hand the
+//            opponent an immediate win.
 import { FACES, checkWinsAndDraw } from './state.js';
 import { inverseMove, movesIncludingCubie } from './moves.js';
 import { setStickerMark, getCubiePosition } from './scene.js';
+
+const MEDIUM_MISTAKE_CHANCE = 0.35;
 
 function cloneState(state) {
   const clone = {};
@@ -62,6 +67,10 @@ export function chooseCell(state, aiMark, opponentMark, sceneRefs, difficulty) {
     return pickRandom(cells);
   }
 
+  if (difficulty === 'medium' && Math.random() < MEDIUM_MISTAKE_CHANCE) {
+    return pickRandom(cells);
+  }
+
   const winCell = cells.find((cell) => wouldWin(state, cell, aiMark));
   if (winCell) return winCell;
   const blockCell = cells.find((cell) => wouldWin(state, cell, opponentMark));
@@ -81,6 +90,10 @@ export function chooseCell(state, aiMark, opponentMark, sceneRefs, difficulty) {
 // to the moves allowed under the current turn's constraint.
 export function chooseMove(sceneRefs, aiMark, opponentMark, legalMoves, difficulty) {
   if (difficulty === 'easy') {
+    return pickRandom(Array.from(legalMoves));
+  }
+
+  if (difficulty === 'medium' && Math.random() < MEDIUM_MISTAKE_CHANCE) {
     return pickRandom(Array.from(legalMoves));
   }
 
